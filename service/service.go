@@ -77,8 +77,8 @@ func (s *Service) DBConnectionMiddleware(rw http.ResponseWriter, r *http.Request
 
 // Start is a convenience function used to start the service once all the routes and middleware has been added.
 // On calling it loops through all the routes adds them to the mux.Router
-// makes a classic negroni, adds add the middleware to that negroni instance, then adds the routes the
-// negroni instance and starts the service
+// makes a classic negroni, adds middleware stack and routes to that negroni instance and
+// starts the service.
 func (s *Service) Start() {
 	s.Negroni = negroni.Classic()
 
@@ -86,7 +86,7 @@ func (s *Service) Start() {
 		s.Router.HandleFunc(s.prefix+route.path, route.handler).Methods(route.method)
 	}
 
-	s.Negroni.Use(negroni.HandlerFunc(s.DBConnectionMiddleware))
+	// s.Negroni.Use(negroni.HandlerFunc(s.DBConnectionMiddleware))
 
 	for _, middleware := range s.middleware {
 		s.Negroni.Use(negroni.HandlerFunc(middleware))

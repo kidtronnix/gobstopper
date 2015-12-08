@@ -34,6 +34,7 @@ func TestServiceWithDB(t *testing.T) {
 		rw.Header().Set("Foo", "bar")
 		next(rw, r)
 	}
+	service.AddMiddleware(service.DBConnectionMiddleware)
 	service.AddMiddleware(m)
 
 	go service.Start()
