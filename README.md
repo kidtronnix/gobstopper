@@ -38,7 +38,7 @@ go run main.go -port 8000 -prefix "/v1" -connection "mysql|user:pass@tcp(host:33
 
 Gobstopper consists of two core packages:
 
-### `database` - [Go docs](https://github.com/seedboxtech/gobstopper/db)
+### `database` - [Go docs](https://godoc.org/github.com/seedboxtech/gobstopper/db)
 
 To use this package...
 
@@ -48,7 +48,7 @@ import github.com/seedboxtech/gobstopper/db
 
 To use this package...
 
-### `service` - [Go docs](https://github.com/seedboxtech/gobstopper/service)
+### `service` - [Go docs](https://godoc.org/github.com/seedboxtech/gobstopper/service)
 
 ```golang
 import github.com/seedboxtech/gobstopper/service
