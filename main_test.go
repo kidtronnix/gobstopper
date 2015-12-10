@@ -33,7 +33,7 @@ func TestGobstopperFunctional(t *testing.T) {
 
 	time.Sleep(250 * time.Millisecond)
 
-	response, err := http.Get("http://localhost:8008/v1/")
+	response, err := http.Get("http://localhost:8008/v1/?token=123")
 	assert.NoError(err)
 	if err == nil {
 		defer response.Body.Close()
