@@ -8,9 +8,9 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/seedboxtech/adx/db"
-	"github.com/seedboxtech/adx/middleware/filters"
-	"github.com/seedboxtech/adx/service"
+	"github.com/seedboxtech/gobstopper/db"
+	"github.com/seedboxtech/gobstopper/middleware/example"
+	"github.com/seedboxtech/gobstopper/service"
 )
 
 var (
@@ -43,7 +43,7 @@ func start() {
 	service.AddRoute("GET", "/", handler)
 	// Adds db connection to request context
 	service.AddMiddleware(service.DBConnectionMiddleware)
-	service.AddMiddleware(filters.FilterMiddleware)
+	service.AddMiddleware(example.Middleware)
 	service.Start()
 }
 
