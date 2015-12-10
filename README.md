@@ -29,11 +29,7 @@ A highly opinionated golang web stack.
 
 ## Usage
 
-You can use this project in two ways; as a starter template or import the core packages in your existing project.
-
-### Starter Template
-
-To run the starter template...
+Look at `main.go` to see a basic usage of a gobstopper stack. Here's an example of how to start it...
 
 ```bash
 go run main.go -port 8000 -prefix "/v1" -connection "mysql|user:pass@tcp(host:3306)/db"
@@ -42,20 +38,7 @@ go run main.go -port 8000 -prefix "/v1" -connection "mysql|user:pass@tcp(host:33
 
 ### Core Packages
 
-Gobstopper consists of two core packages:
+#### `github.com/seedboxtech/gobstopper/db` - [Go docs](https://godoc.org/github.com/seedboxtech/gobstopper/db)
 
-### `database` - [Go docs](https://godoc.org/github.com/seedboxtech/gobstopper/db)
+#### `github.com/seedboxtech/gobstopper/service` - [Go docs](https://godoc.org/github.com/seedboxtech/gobstopper/service)
 
-To use this package...
-
-```golang
-import github.com/seedboxtech/gobstopper/db
-```
-
-To use this package...
-
-### `service` - [Go docs](https://godoc.org/github.com/seedboxtech/gobstopper/service)
-
-```golang
-import github.com/seedboxtech/gobstopper/service
-```
