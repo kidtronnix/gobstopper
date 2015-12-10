@@ -4,16 +4,29 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
+var conn string
+
+func init() {
+	DB := os.Getenv("DB")
+	switch DB {
+	case "travis":
+		conn = "mysql|root:@/golang?charset=utf8"
+	default:
+		conn = "mysql|root:root@/golang?charset=utf8"
+	}
+}
+
 func TestServiceWithDB(t *testing.T) {
 	assert := assert.New(t)
 
-	service, err := NewService(8000, "/v1/prefix", "mysql|root:root@/golang?charset=utf8&parseTime=True&loc=Local")
+	service, err := NewService(8000, "/v1/prefix", conn)
 	assert.NoError(err)
 	assert.NotNil(service)
 	assert.IsType(&Service{}, service)

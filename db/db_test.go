@@ -2,6 +2,7 @@ package database
 
 import (
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/gorilla/context"
@@ -9,13 +10,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var conn string
+
+func init() {
+	DB := os.Getenv("DB")
+	switch DB {
+	case "travis":
+		conn = "root:@/golang?charset=utf8"
+	default:
+		conn = "root:root@/golang?charset=utf8"
+	}
+}
+
 func TestSetDBInContext(t *testing.T) {
 	assert := assert.New(t)
 
 	req, err := http.NewRequest("GET", "http://example.com", nil)
 	assert.NoError(err)
 
-	db, err := sqlx.Open("mysql", "root:root@/golang?charset=utf8&parseTime=True&loc=Local")
+	db, err := sqlx.Open("mysql", conn)
 	assert.NoError(err)
 
 	SetConnectionInRequestContext(req, db)
@@ -29,7 +42,7 @@ func TestGetFromContext(t *testing.T) {
 	req, err := http.NewRequest("GET", "http://example.com", nil)
 	assert.NoError(err)
 
-	db, err := sqlx.Open("mysql", "root:root@/golang?charset=utf8&parseTime=True&loc=Local")
+	db, err := sqlx.Open("mysql", conn)
 	assert.NoError(err)
 
 	context.Set(req, DatabaseKey, db)
@@ -40,7 +53,7 @@ func TestGetFromContext(t *testing.T) {
 func TestConnectToSQL(t *testing.T) {
 	assert := assert.New(t)
 
-	db, err := ConnectToSQL("mysql|root:root@/golang?charset=utf8&parseTime=True&loc=Local")
+	db, err := ConnectToSQL("mysql|" + conn)
 	assert.NoError(err)
 
 	err = db.Ping()
@@ -59,7 +72,7 @@ func TestConnectToSQLBadConnection(t *testing.T) {
 func TestGetDatabaseName(t *testing.T) {
 	assert := assert.New(t)
 
-	db, err := sqlx.Open("mysql", "root:root@/golang?charset=utf8&parseTime=True&loc=Local")
+	db, err := sqlx.Open("mysql", conn)
 	assert.NoError(err)
 
 	name, err := GetDatabaseName(db)
