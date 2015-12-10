@@ -42,3 +42,10 @@ go run main.go -port 8000 -prefix "/v1" -connection "mysql|user:pass@tcp(host:33
 
 #### `github.com/seedboxtech/gobstopper/service` - [Go docs](https://godoc.org/github.com/seedboxtech/gobstopper/service)
 
+## Contributing
+
+This project aims to have unit tests with 100% code coverage as well as a functional test of the main package. All PRs should have full tests included with them. To run the tests...
+
+```bash
+go test -v ./...
+```
