@@ -35,6 +35,10 @@ Look at `main.go` to see a basic usage of a gobstopper stack. Here's an example 
 go run main.go -port 8000 -prefix "/v1" -connection "mysql|user:pass@tcp(host:3306)/db"
 ```
 
+## Adding Middleware
+
+To see an example of some custom middleware take a look at `middleware/example/example.go`. To see how to add it to the stack, see `main.go`.
+
 
 ### Core Packages
 

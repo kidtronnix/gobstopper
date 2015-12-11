@@ -1,4 +1,5 @@
-// A highly opinionated golang web stack. It consists of two packages. See main.go for an example of how to use these packages or as a starter template.
+// A highly opinionated golang web stack. It consists of two core packages, 'service' and 'db'. See main.go for an example of how to use these packages.
+// There is also an example middleware included to show how to add custom middleware to your stack.
 package main
 
 import (
