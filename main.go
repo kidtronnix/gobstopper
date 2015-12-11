@@ -1,3 +1,4 @@
+// A highly opinionated golang web stack. It consists of two packages. See main.go for an example of how to use these packages or as a starter template.
 package main
 
 import (
