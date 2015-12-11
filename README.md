@@ -2,6 +2,12 @@
 
 A highly opinionated golang web stack.
 
+**version** 1.0
+
+[![Build Status](https://travis-ci.org/seedboxtech/gobstopper.svg?branch=master)](https://travis-ci.org/seedboxtech/gobstopper)
+
+## Stack
+
 ### [mux](http://www.gorillatoolkit.org/pkg/mux) - Router
 
 > The name mux stands for "HTTP request multiplexer".
@@ -23,11 +29,7 @@ A highly opinionated golang web stack.
 
 ## Usage
 
-You can use this project in two ways; as a starter template or import the core packages in your existing project.
-
-### Starter Template
-
-To run the starter template...
+Look at `main.go` to see a basic usage of a gobstopper stack. Here's an example of how to start it...
 
 ```bash
 go run main.go -port 8000 -prefix "/v1" -connection "mysql|user:pass@tcp(host:3306)/db"
@@ -36,20 +38,14 @@ go run main.go -port 8000 -prefix "/v1" -connection "mysql|user:pass@tcp(host:33
 
 ### Core Packages
 
-Gobstopper consists of two core packages:
+#### `github.com/seedboxtech/gobstopper/db` - [Go docs](https://godoc.org/github.com/seedboxtech/gobstopper/db)
 
-### `database` - [Go docs]()
+#### `github.com/seedboxtech/gobstopper/service` - [Go docs](https://godoc.org/github.com/seedboxtech/gobstopper/service)
 
-To use this package...
+## Contributing
 
-```golang
-import github.com/seedboxtech/gobstopper/db
-```
+This project aims to have unit tests with 100% code coverage as well as a functional test of the main package. All PRs should have full tests included with them. To run the tests...
 
-To use this package...
-
-### `service` - [Go docs]()
-
-```golang
-import github.com/seedboxtech/gobstopper/service
+```bash
+go test -v ./...
 ```

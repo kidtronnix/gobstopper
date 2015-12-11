@@ -8,7 +8,7 @@ import (
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
-	"github.com/seedboxtech/adx/db"
+	"github.com/seedboxtech/gobstopper/db"
 )
 
 // Service is the main struct responsible for holding all the required pieces of the stack.
