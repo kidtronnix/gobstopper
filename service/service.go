@@ -1,3 +1,4 @@
+// Package service helps make services with a mux, negroni, sqlx stack.
 package service
 
 import (
@@ -11,17 +12,15 @@ import (
 )
 
 // Service is the main struct responsible for holding all the required pieces of the stack.
-// It consists of a sqlx.DB connection, an array of negroni middleware functions, an array of routes handlers and a mux.Router.
-// Before start up of the service the routes are added to the mux.Router, the DB connection is added to
-// the context of the request so that connection can be used in any function that has access to the *http.Request object.
-// The request will also pass through all the middleware added to the service in the order it was added.
+// It consists of a sqlx.DB connection, an array of negroni middleware functions, a Negroni instance, an array of routes handlers, a mux.Router instance,
+// the service port to run from and the path prefix.
 type Service struct {
-	port       int
-	prefix     string
+	Port       int
+	Prefix     string
 	Router     *mux.Router
 	Negroni    *negroni.Negroni
-	routes     []Route
-	middleware []Middleware
+	Routes     []Route
+	Middleware []Middleware
 	DB         *sqlx.DB
 }
 
@@ -29,9 +28,9 @@ type Service struct {
 // The path is the URL path to the route, this path will be added to the service prefix.
 // The handler is the function responsible for actually handling the request.
 type Route struct {
-	path    string
-	method  string
-	handler RouteHandler
+	Path    string
+	Method  string
+	Handler RouteHandler
 }
 
 // RouteHandler is simply an alias of the http.HandlerFunc.
@@ -46,14 +45,14 @@ type Middleware func(rw http.ResponseWriter, r *http.Request, next http.HandlerF
 // The prefix is added as a path before all routes. The connection is a slightly modified sql connection string
 // in the form of `driverName|dataSourceName` example, mysql|root:root@/golang?charset=utf8.
 // If you do not need SQL DB connection simply leave the string empty.
-// To access the *sqlx.DB connection in route handlers or middleware functions call database.GetFromContext(r *http.Request)
 func NewService(port int, prefix string, connection string) (*Service, error) {
 	s := &Service{}
-	s.port = port
-	s.prefix = prefix
+	s.Port = port
+	s.Prefix = prefix
 	s.Router = mux.NewRouter()
-	s.routes = []Route{}
-	s.middleware = []Middleware{}
+	s.Routes = []Route{}
+	s.Middleware = []Middleware{}
+	s.Negroni = negroni.New()
 	if connection != "" {
 		db, err := database.ConnectToSQL(connection)
 		if err != nil {
@@ -70,43 +69,42 @@ func NewService(port int, prefix string, connection string) (*Service, error) {
 
 // DBConnectionMiddleware is a middleware function that sets the *sqlx.DB connection into
 // the request context.
+// To access the *sqlx.DB connection in route handlers or middleware functions call database.GetFromContext(r *http.Request)
 func (s *Service) DBConnectionMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	database.SetConnectionInRequestContext(r, s.DB)
 	next(rw, r)
 }
 
-// Start is a convenience function used to start the service once all the routes and middleware has been added.
+// Start is a convenience function used to start the service once all the routes and middleware have been added.
 // On calling it loops through all the routes adds them to the mux.Router
 // makes a classic negroni, adds middleware stack and routes to that negroni instance and
 // starts the service.
 func (s *Service) Start() {
 	s.Negroni = negroni.Classic()
 
-	for _, route := range s.routes {
-		s.Router.HandleFunc(s.prefix+route.path, route.handler).Methods(route.method)
+	for _, route := range s.Routes {
+		s.Router.HandleFunc(s.Prefix+route.Path, route.Handler).Methods(route.Method)
 	}
 
-	// s.Negroni.Use(negroni.HandlerFunc(s.DBConnectionMiddleware))
-
-	for _, middleware := range s.middleware {
+	for _, middleware := range s.Middleware {
 		s.Negroni.Use(negroni.HandlerFunc(middleware))
 	}
 
 	s.Negroni.UseHandler(s.Router)
-	s.Negroni.Run(fmt.Sprintf(":%d", s.port))
+	s.Negroni.Run(fmt.Sprintf(":%d", s.Port))
 }
 
-// AddRoute will add a route to the service.
+// AddRoute will add a route to service.Routes.
 func (s *Service) AddRoute(method, path string, handler RouteHandler) {
 	r := Route{
-		method:  method,
-		path:    path,
-		handler: handler,
+		Method:  method,
+		Path:    path,
+		Handler: handler,
 	}
-	s.routes = append(s.routes, r)
+	s.Routes = append(s.Routes, r)
 }
 
-// AddMiddleware will add middleware to the http stack.
+// AddMiddleware will add middleware to service.Middleware.
 func (s *Service) AddMiddleware(m Middleware) {
-	s.middleware = append(s.middleware, m)
+	s.Middleware = append(s.Middleware, m)
 }
