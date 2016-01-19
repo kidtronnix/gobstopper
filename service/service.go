@@ -30,12 +30,8 @@ type Service struct {
 type Route struct {
 	Path    string
 	Method  string
-	Handler RouteHandler
+	Handler http.Handler
 }
-
-// RouteHandler is simply an alias of the http.HandlerFunc.
-// It is the function used to handle requests and write responses.
-type RouteHandler http.HandlerFunc
 
 // Middleware is a type that has the required signature to act as negroni Middleware.
 // A new middleware should call the next function to yeild to the next middleware in the chain.
@@ -82,10 +78,6 @@ func (s *Service) DBConnectionMiddleware(rw http.ResponseWriter, r *http.Request
 func (s *Service) Start() {
 	s.Negroni = negroni.Classic()
 
-	for _, route := range s.Routes {
-		s.Router.HandleFunc(s.Prefix+route.Path, route.Handler).Methods(route.Method)
-	}
-
 	for _, middleware := range s.Middleware {
 		s.Negroni.Use(negroni.HandlerFunc(middleware))
 	}
@@ -94,14 +86,14 @@ func (s *Service) Start() {
 	s.Negroni.Run(fmt.Sprintf(":%d", s.Port))
 }
 
-// AddRoute will add a route to service.Routes.
-func (s *Service) AddRoute(method, path string, handler RouteHandler) {
-	r := Route{
-		Method:  method,
-		Path:    path,
-		Handler: handler,
-	}
-	s.Routes = append(s.Routes, r)
+// AddRouteHandler will add a route to service.Routes for a given http.Handler.
+func (s *Service) AddRouteHandler(method, path string, handler http.Handler) {
+	s.Router.Handle(s.Prefix+path, handler).Methods(method).Name(method + " " + path)
+}
+
+// AddRouteHandlerFunc will add a route to service.Routes for a given http.HandlerFunc.
+func (s *Service) AddRouteHandlerFunc(method, path string, handler http.HandlerFunc) {
+	s.Router.HandleFunc(s.Prefix+path, handler).Methods(method).Name(method + " " + path)
 }
 
 // AddMiddleware will add middleware to service.Middleware.

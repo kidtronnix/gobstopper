@@ -23,7 +23,44 @@ func init() {
 	}
 }
 
-func TestServiceWithDB(t *testing.T) {
+type TestHandler struct{}
+
+func (th TestHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	rw.WriteHeader(http.StatusOK)
+	fmt.Fprint(rw, "ok")
+}
+
+func TestAddRouteHandler(t *testing.T) {
+	assert := assert.New(t)
+
+	service, err := NewService(8001, "/v1/prefix", conn)
+	assert.NoError(err)
+
+	h := TestHandler{}
+
+	service.AddRouteHandler("GET", "", h)
+
+	r := service.Router.Get("GET ")
+
+	assert.Equal(h, r.GetHandler())
+}
+
+func TestAddRouteHandlerFunc(t *testing.T) {
+	assert := assert.New(t)
+
+	service, err := NewService(8001, "/v1/prefix", conn)
+	assert.NoError(err)
+
+	h := TestHandler{}
+
+	service.AddRouteHandlerFunc("GET", "", h.ServeHTTP)
+
+	r := service.Router.Get("GET ")
+
+	assert.NotNil(r)
+}
+
+func TestServiceStartsWithDB(t *testing.T) {
 	assert := assert.New(t)
 
 	service, err := NewService(8000, "/v1/prefix", conn)
@@ -38,7 +75,7 @@ func TestServiceWithDB(t *testing.T) {
 	err = service.DB.Ping()
 	assert.NoError(err)
 
-	service.AddRoute("GET", "", func(rw http.ResponseWriter, r *http.Request) {
+	service.AddRouteHandlerFunc("GET", "", func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 		fmt.Fprint(rw, "ok")
 	})
@@ -55,7 +92,6 @@ func TestServiceWithDB(t *testing.T) {
 	time.Sleep(250 * time.Millisecond)
 
 	response, err := http.Get("http://localhost:8000/v1/prefix")
-
 	assert.NoError(err)
 	if err == nil {
 		defer response.Body.Close()
@@ -67,7 +103,7 @@ func TestServiceWithDB(t *testing.T) {
 	}
 }
 
-func TestServiceWithoutDB(t *testing.T) {
+func TestNewServiceWithoutDB(t *testing.T) {
 	assert := assert.New(t)
 
 	service, err := NewService(8000, "/v1/prefix", "")

@@ -42,7 +42,7 @@ func start() {
 	if err != nil {
 		log.Fatalf("Unable to start service: %s", err)
 	}
-	service.AddRoute("GET", "/", handler)
+	service.AddRouteHandlerFunc("GET", "/", handler)
 	// Adds db connection to request context
 	service.AddMiddleware(service.DBConnectionMiddleware)
 	service.AddMiddleware(example.Middleware)
