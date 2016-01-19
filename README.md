@@ -4,7 +4,7 @@ A highly opinionated golang web stack.
 
 [![Build Status](https://travis-ci.org/seedboxtech/gobstopper.svg?branch=master)](https://travis-ci.org/seedboxtech/gobstopper) [![](https://godoc.org/github.com//seedboxtech/gobstopper?status.svg)](http://godoc.org/github.com//seedboxtech/gobstopper)
 
-**version** 1.0
+**version** 2.0
 
 ## Stack
 
