@@ -17,6 +17,7 @@ import (
 type Service struct {
 	Port       int
 	Prefix     string
+	router     *mux.Router
 	Router     *mux.Router
 	Negroni    *negroni.Negroni
 	Routes     []Route
@@ -45,7 +46,8 @@ func NewService(port int, prefix string, connection string) (*Service, error) {
 	s := &Service{}
 	s.Port = port
 	s.Prefix = prefix
-	s.Router = mux.NewRouter()
+	s.router = mux.NewRouter().StrictSlash(true)
+	s.Router = s.router.PathPrefix(prefix).Subrouter().StrictSlash(true)
 	s.Routes = []Route{}
 	s.Middleware = []Middleware{}
 	s.Negroni = negroni.New()
@@ -82,18 +84,18 @@ func (s *Service) Start() {
 		s.Negroni.Use(negroni.HandlerFunc(middleware))
 	}
 
-	s.Negroni.UseHandler(s.Router)
+	s.Negroni.UseHandler(s.router)
 	s.Negroni.Run(fmt.Sprintf(":%d", s.Port))
 }
 
 // AddRouteHandler will add a route to service.Routes for a given http.Handler.
 func (s *Service) AddRouteHandler(method, path string, handler http.Handler) {
-	s.Router.Handle(s.Prefix+path, handler).Methods(method).Name(method + " " + path)
+	s.Router.Handle(path, handler).Methods(method).Name(method + " " + path)
 }
 
 // AddRouteHandlerFunc will add a route to service.Routes for a given http.HandlerFunc.
 func (s *Service) AddRouteHandlerFunc(method, path string, handler http.HandlerFunc) {
-	s.Router.HandleFunc(s.Prefix+path, handler).Methods(method).Name(method + " " + path)
+	s.Router.HandleFunc(path, handler).Methods(method).Name(method + " " + path)
 }
 
 // AddMiddleware will add middleware to service.Middleware.

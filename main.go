@@ -38,15 +38,18 @@ func initFlags(f *flag.FlagSet, arguments []string) {
 }
 
 func start() {
-	service, err := service.NewService(port, prefix, connection)
+	s, err := service.NewService(port, prefix, connection)
 	if err != nil {
 		log.Fatalf("Unable to start service: %s", err)
 	}
-	service.AddRouteHandlerFunc("GET", "/", handler)
+
+	// s.Router.HandleFunc("/", handler).Methods("GET")
+
+	s.AddRouteHandlerFunc("GET", "/", handler)
 	// Adds db connection to request context
-	service.AddMiddleware(service.DBConnectionMiddleware)
-	service.AddMiddleware(example.Middleware)
-	service.Start()
+	s.AddMiddleware(s.DBConnectionMiddleware)
+	s.AddMiddleware(example.Middleware)
+	s.Start()
 }
 
 func main() {

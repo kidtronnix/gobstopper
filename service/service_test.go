@@ -38,9 +38,9 @@ func TestAddRouteHandler(t *testing.T) {
 
 	h := TestHandler{}
 
-	service.AddRouteHandler("GET", "", h)
+	service.AddRouteHandler("GET", "/", h)
 
-	r := service.Router.Get("GET ")
+	r := service.Router.Get("GET /")
 
 	assert.Equal(h, r.GetHandler())
 }
@@ -53,9 +53,9 @@ func TestAddRouteHandlerFunc(t *testing.T) {
 
 	h := TestHandler{}
 
-	service.AddRouteHandlerFunc("GET", "", h.ServeHTTP)
+	service.AddRouteHandlerFunc("GET", "/", h.ServeHTTP)
 
-	r := service.Router.Get("GET ")
+	r := service.Router.Get("GET /")
 
 	assert.NotNil(r)
 }
@@ -75,7 +75,7 @@ func TestServiceStartsWithDB(t *testing.T) {
 	err = service.DB.Ping()
 	assert.NoError(err)
 
-	service.AddRouteHandlerFunc("GET", "", func(rw http.ResponseWriter, r *http.Request) {
+	service.AddRouteHandlerFunc("GET", "/", func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 		fmt.Fprint(rw, "ok")
 	})
