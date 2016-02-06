@@ -38,18 +38,31 @@ func initFlags(f *flag.FlagSet, arguments []string) {
 }
 
 func start() {
-	s, err := service.NewService(port, prefix, connection)
+	server, err := service.NewService(port, prefix, connection)
 	if err != nil {
 		log.Fatalf("Unable to start service: %s", err)
 	}
 
-	// s.Router.HandleFunc("/", handler).Methods("GET")
+	// Adds db connection to request context for all handler functions
+	server.AddMiddleware(server.DBConnectionMiddleware)
+	// Spoof auth middleware
+	server.AddMiddleware(example.Middleware)
 
-	s.AddRouteHandlerFunc("GET", "/", handler)
-	// Adds db connection to request context
-	s.AddMiddleware(s.DBConnectionMiddleware)
-	s.AddMiddleware(example.Middleware)
-	s.Start()
+	// Index Route
+	server.AddRouteHandlerFunc("GET", "/", handler)
+
+	// Admin Routes
+	adminRoutes := server.NewRouteGroup("/admin")
+	adminRoutes.AddMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		fmt.Println("Route specific middleware: only for admins")
+		next(w, r)
+	})
+	adminRoutes.AddRouteHandlerFunc("GET", "/foo", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "woop 2 foo")
+	})
+
+	// Start server
+	server.Start()
 }
 
 func main() {

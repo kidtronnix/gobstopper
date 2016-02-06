@@ -15,14 +15,14 @@ import (
 // It consists of a sqlx.DB connection, an array of negroni middleware functions, a Negroni instance, an array of routes handlers, a mux.Router instance,
 // the service port to run from and the path prefix.
 type Service struct {
-	Port       int
-	Prefix     string
-	router     *mux.Router
-	Router     *mux.Router
-	Negroni    *negroni.Negroni
-	Routes     []Route
-	Middleware []Middleware
-	DB         *sqlx.DB
+	Port        int
+	Prefix      string
+	router      *mux.Router
+	Router      *mux.Router
+	RouteGroups []*RouteGroup
+	Negroni     *negroni.Negroni
+	Middleware  []Middleware
+	DB          *sqlx.DB
 }
 
 // Route is the struct for routes. It consists of the HTTP method ie GET, POST, etc...
@@ -32,6 +32,12 @@ type Route struct {
 	Path    string
 	Method  string
 	Handler http.Handler
+}
+
+type RouteGroup struct {
+	Path       string
+	Router     *mux.Router
+	Middleware []Middleware
 }
 
 // Middleware is a type that has the required signature to act as negroni Middleware.
@@ -48,7 +54,6 @@ func NewService(port int, prefix string, connection string) (*Service, error) {
 	s.Prefix = prefix
 	s.router = mux.NewRouter().StrictSlash(true)
 	s.Router = s.router.PathPrefix(prefix).Subrouter().StrictSlash(true)
-	s.Routes = []Route{}
 	s.Middleware = []Middleware{}
 	s.Negroni = negroni.New()
 	if connection != "" {
@@ -73,12 +78,35 @@ func (s *Service) DBConnectionMiddleware(rw http.ResponseWriter, r *http.Request
 	next(rw, r)
 }
 
+func (s *Service) AddMiddlewareToRouter(rg *RouteGroup) {
+	n := negroni.New()
+	for _, m := range rg.Middleware {
+		n.Use(negroni.HandlerFunc(m))
+	}
+	n.Use(negroni.Wrap(rg.Router))
+	s.Router.PathPrefix(rg.Path).Handler(n)
+}
+
+func (s *Service) NewRouteGroup(path string) *RouteGroup {
+	router := mux.NewRouter()
+	rg := RouteGroup{
+		Router: router.PathPrefix(s.Prefix + path).Subrouter(),
+		Path:   path,
+	}
+	s.RouteGroups = append(s.RouteGroups, &rg)
+	return &rg
+}
+
 // Start is a convenience function used to start the service once all the routes and middleware have been added.
 // On calling it loops through all the routes adds them to the mux.Router
 // makes a classic negroni, adds middleware stack and routes to that negroni instance and
 // starts the service.
 func (s *Service) Start() {
 	s.Negroni = negroni.Classic()
+
+	for _, rg := range s.RouteGroups {
+		s.AddMiddlewareToRouter(rg)
+	}
 
 	for _, middleware := range s.Middleware {
 		s.Negroni.Use(negroni.HandlerFunc(middleware))
@@ -90,15 +118,35 @@ func (s *Service) Start() {
 
 // AddRouteHandler will add a route to service.Routes for a given http.Handler.
 func (s *Service) AddRouteHandler(method, path string, handler http.Handler) {
-	s.Router.Handle(path, handler).Methods(method).Name(method + " " + path)
+	addRouteHandler(s.Router, method, path, handler)
 }
 
 // AddRouteHandlerFunc will add a route to service.Routes for a given http.HandlerFunc.
 func (s *Service) AddRouteHandlerFunc(method, path string, handler http.HandlerFunc) {
-	s.Router.HandleFunc(path, handler).Methods(method).Name(method + " " + path)
+	addRouteHandlerFunc(s.Router, method, path, handler)
 }
 
 // AddMiddleware will add middleware to service.Middleware.
 func (s *Service) AddMiddleware(m Middleware) {
 	s.Middleware = append(s.Middleware, m)
+}
+
+func (r *RouteGroup) AddRouteHandler(method, path string, handler http.Handler) {
+	addRouteHandler(r.Router, method, path, handler)
+}
+
+func (r *RouteGroup) AddRouteHandlerFunc(method, path string, handler http.HandlerFunc) {
+	addRouteHandlerFunc(r.Router, method, path, handler)
+}
+
+func (r *RouteGroup) AddMiddleware(m Middleware) {
+	r.Middleware = append(r.Middleware, m)
+}
+
+func addRouteHandlerFunc(r *mux.Router, method, path string, handler http.HandlerFunc) {
+	r.HandleFunc(path, handler).Methods(method).Name(method + " " + path)
+}
+
+func addRouteHandler(r *mux.Router, method, path string, handler http.Handler) {
+	r.Handle(path, handler).Methods(method).Name(method + " " + path)
 }
