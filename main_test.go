@@ -43,7 +43,6 @@ func TestGobstopperFunctional(t *testing.T) {
 	f := flag.NewFlagSet("test", flag.ContinueOnError)
 	initFlags(f, arguments)
 	go start()
-
 	time.Sleep(250 * time.Millisecond)
 
 	response, err := http.Get("http://localhost:8008/v1/?token=123")
