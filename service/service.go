@@ -20,7 +20,6 @@ type Service struct {
 	router      *mux.Router
 	Router      *mux.Router
 	RouteGroups []*RouteGroup
-	Negroni     *negroni.Negroni
 	Middleware  []Middleware
 	DB          *sqlx.DB
 }
@@ -55,7 +54,6 @@ func NewService(port int, prefix string, connection string) (*Service, error) {
 	s.router = mux.NewRouter().StrictSlash(true)
 	s.Router = s.router.PathPrefix(prefix).Subrouter().StrictSlash(true)
 	s.Middleware = []Middleware{}
-	s.Negroni = negroni.New()
 	if connection != "" {
 		db, err := database.ConnectToSQL(connection)
 		if err != nil {
@@ -78,13 +76,17 @@ func (s *Service) DBConnectionMiddleware(rw http.ResponseWriter, r *http.Request
 	next(rw, r)
 }
 
-func (s *Service) AddMiddlewareToRouter(rg *RouteGroup) {
+func (s *Service) AddMiddlewareToRouteGroup(rg *RouteGroup) {
 	n := negroni.New()
-	for _, m := range rg.Middleware {
+	addMiddlewareToRouter(n, rg.Middleware, rg.Router)
+	s.Router.PathPrefix(rg.Path).Handler(n)
+}
+
+func addMiddlewareToRouter(n *negroni.Negroni, ms []Middleware, r *mux.Router) {
+	for _, m := range ms {
 		n.Use(negroni.HandlerFunc(m))
 	}
-	n.Use(negroni.Wrap(rg.Router))
-	s.Router.PathPrefix(rg.Path).Handler(n)
+	n.Use(negroni.Wrap(r))
 }
 
 func (s *Service) NewRouteGroup(path string) *RouteGroup {
@@ -102,18 +104,15 @@ func (s *Service) NewRouteGroup(path string) *RouteGroup {
 // makes a classic negroni, adds middleware stack and routes to that negroni instance and
 // starts the service.
 func (s *Service) Start() {
-	s.Negroni = negroni.Classic()
+	n := negroni.Classic()
 
 	for _, rg := range s.RouteGroups {
-		s.AddMiddlewareToRouter(rg)
+		s.AddMiddlewareToRouteGroup(rg)
 	}
 
-	for _, middleware := range s.Middleware {
-		s.Negroni.Use(negroni.HandlerFunc(middleware))
-	}
+	addMiddlewareToRouter(n, s.Middleware, s.router)
 
-	s.Negroni.UseHandler(s.router)
-	s.Negroni.Run(fmt.Sprintf(":%d", s.Port))
+	n.Run(fmt.Sprintf(":%d", s.Port))
 }
 
 // AddRouteHandler will add a route to service.Routes for a given http.Handler.
