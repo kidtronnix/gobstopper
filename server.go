@@ -17,6 +17,12 @@ func NewServer(conf Config) (*Server, error) {
 	}
 
 	var DB *sqlx.DB
+	server := Server{
+		&conf,
+		Router,
+		DB,
+	}
+
 	if conf.Connection != "" {
 		db, err := ConnectToSQL(conf.Connection)
 		if err != nil {
@@ -25,24 +31,14 @@ func NewServer(conf Config) (*Server, error) {
 		if err := db.Ping(); err != nil {
 			return nil, err
 		}
-		DB = db
+		server.DB = db
+		server.Negroni.Use(negroni.HandlerFunc(server.DBConnectionMiddleware))
 	}
 
-	return &Server{
-		&conf,
-		Router,
-		DB,
-	}, nil
+	return &server, nil
+
 }
 
-type ServerInterface interface {
-	Route(Route)
-	RouteGroup(string, *negroni.Negroni, func(ServerInterface))
-}
-
-// Server is the main struct responsible for holding all the required pieces of the stack.
-// It consists of a sqlx.DB connection, an array of negroni middleware functions, a Negroni instance, an array of routes handlers, a mux.Router instance,
-// the service port to run from and the path prefix.
 type Server struct {
 	*Config
 	Router *mux.Router
@@ -60,7 +56,6 @@ func (s *Server) RouteGroup(path string, routing func(*Group)) {
 		Router:     mux.NewRouter(),
 		Negroni:    negroni.New(),
 	}
-
 	routing(g)
 	g.Negroni.Use(negroni.Wrap(g.Router))
 	s.Router.PathPrefix(s.PathPrefix + path).Handler(g.Negroni)
@@ -78,9 +73,6 @@ func (s *Server) Middleware(ms ...negroni.Handler) {
 }
 
 func (s *Server) Route(r Route) {
-	if s.PathPrefix == "" {
-		s.Router.Path(r.Path).Methods(r.Method).Handler(r.Handler)
-	} else {
-		s.Router.PathPrefix(s.PathPrefix).Path(r.Path).Methods(r.Method).Handler(r.Handler)
-	}
+	s.Router.Path(s.PathPrefix + r.Path).Methods(r.Method).Handler(r.Handler)
+
 }
