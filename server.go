@@ -49,12 +49,6 @@ type Server struct {
 	DB     *sqlx.DB
 }
 
-type Route struct {
-	Method  string
-	Path    string
-	Handler http.Handler
-}
-
 func (s *Server) DBConnectionMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	SetConnectionInRequestContext(r, s.DB)
 	next(rw, r)

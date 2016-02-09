@@ -13,3 +13,9 @@ type Config struct {
 	Negroni         *negroni.Negroni                         `OPTIONAL DEFAULT TO CLASSIC`
 	NotFoundHandler func(http.ResponseWriter, *http.Request) `OPTIONAL DEFAULT TO BUILTIN MUX`
 }
+
+type Route struct {
+	Method  string
+	Path    string
+	Handler http.Handler
+}
