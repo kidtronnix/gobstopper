@@ -1,5 +1,3 @@
-// A highly opinionated golang web stack; mux, negroni, sqlx. It consists of two core packages, 'service' and 'db'. See 'main.go' for an example of how to use these packages.
-// There is also an example middleware included to show how to add custom middleware to your stack.
 package main
 
 import (
@@ -12,7 +10,6 @@ import (
 	"github.com/codegangsta/negroni"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/seedboxtech/gobstopper"
-	"github.com/seedboxtech/gobstopper/examples/middleware"
 )
 
 var conf gobstopper.Config
@@ -39,24 +36,13 @@ func start() {
 		log.Fatalf("Unable to start service: %s", err)
 	}
 
-	server.Negroni.Use(negroni.HandlerFunc(server.DBConnectionMiddleware))
-	server.Negroni.Use(negroni.HandlerFunc(middleware.TerribleAuthMiddleware))
+	server.Middleware(negroni.HandlerFunc(server.DBConnectionMiddleware))
 
 	// Index Route
 	server.Route(gobstopper.Route{
 		Method:  "GET",
 		Path:    "/",
 		Handler: http.HandlerFunc(handler),
-	})
-
-	// Admin Routes
-	adminRoutes := server.NewRouteGroup("/admin")
-	adminRoutes.AddMiddleware(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		fmt.Println("Route specific middleware: only for admins")
-		next(w, r)
-	})
-	adminRoutes.AddRouteHandlerFunc("GET", "/foo", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "woop 2 foo")
 	})
 
 	// Start server

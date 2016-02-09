@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var conn string
+
 func init() {
 	DB := os.Getenv("DB")
 	switch DB {
