@@ -1,5 +1,4 @@
-// Package database is a package with convenience functions for working with SQL type dbs.
-package database
+package gobstopper
 
 import (
 	"errors"

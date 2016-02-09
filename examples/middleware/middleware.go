@@ -1,11 +1,11 @@
-package example
+package middleware
 
 import (
 	"fmt"
 	"net/http"
 )
 
-func Middleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func TerribleAuthMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	token := r.FormValue("token")
 	fmt.Println("Performing Authentication check...")
 	if token == "123" {

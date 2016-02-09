@@ -1,4 +1,4 @@
-package database
+package gobstopper
 
 import (
 	"net/http"
@@ -9,8 +9,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )
-
-var conn string
 
 func init() {
 	DB := os.Getenv("DB")

@@ -1,4 +1,4 @@
-package example
+package middleware
 
 import (
 	"net/http"
@@ -18,7 +18,7 @@ func TestMiddleware(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}
 
-	Middleware(w, req, next)
+	TerribleAuthMiddleware(w, req, next)
 	assert.Equal(200, w.Code)
 }
 
@@ -32,7 +32,7 @@ func TestMiddlewareFail(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}
 
-	Middleware(w, req, next)
+	TerribleAuthMiddleware(w, req, next)
 	assert.Equal(401, w.Code)
 	assert.Equal("Authentication failed", w.Body.String())
 }
