@@ -12,6 +12,10 @@ import (
 func NewServer(conf Config) (*Server, error) {
 	Router := mux.NewRouter().StrictSlash(true)
 
+	if conf.NotFoundHandler != nil {
+		Router.NotFoundHandler = conf.NotFoundHandler
+	}
+
 	if conf.Negroni == nil {
 		conf.Negroni = negroni.Classic()
 	}

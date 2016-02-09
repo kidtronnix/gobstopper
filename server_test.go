@@ -51,6 +51,32 @@ func TestNewServerWitDB(t *testing.T) {
 
 }
 
+func TestNewServerCustomNotFoundHandler(t *testing.T) {
+	assert := assert.New(t)
+
+	conf := Config{
+		Port:       8000,
+		PathPrefix: "/v1/prefix",
+		NotFoundHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprint(w, "Not found!")
+		}),
+	}
+
+	server, err := NewServer(conf)
+	assert.NoError(err)
+	assert.NotNil(server)
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("GET", "http://example.com:8000/no/route", nil)
+	assert.NoError(err)
+
+	server.Router.ServeHTTP(w, r)
+
+	assert.Equal(http.StatusNotFound, w.Code)
+	assert.Equal("Not found!", w.Body.String())
+}
+
 func TestNewServerErrorsOnConnectionTypeFailure(t *testing.T) {
 	assert := assert.New(t)
 
@@ -60,9 +86,9 @@ func TestNewServerErrorsOnConnectionTypeFailure(t *testing.T) {
 		Connection: "bad connection type|root:root",
 	}
 
-	service, err := NewServer(conf)
+	server, err := NewServer(conf)
 	assert.Error(err)
-	assert.Nil(service)
+	assert.Nil(server)
 }
 
 func TestNewServerErrorsOnConnectionFailure(t *testing.T) {
@@ -74,9 +100,9 @@ func TestNewServerErrorsOnConnectionFailure(t *testing.T) {
 		Connection: "mysql|bad connection",
 	}
 
-	service, err := NewServer(conf)
+	server, err := NewServer(conf)
 	assert.Error(err)
-	assert.Nil(service)
+	assert.Nil(server)
 }
 
 func TestServerDBConnectionMiddleware(t *testing.T) {
