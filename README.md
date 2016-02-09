@@ -58,6 +58,12 @@ server.RouteGroup("/admin", func(group *gobstopper.Group) {
 
 ```
 
+### Config
+
+For full details of the server [configuration](https://godoc.org/github.com/seedboxtech/gobstopper#Config).
+
+
+
 ### Database Connection
 
 Gobstopper will make your sqlx DB connection pool available to you in all your middleware and handlers.
